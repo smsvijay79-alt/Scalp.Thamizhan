@@ -6,8 +6,8 @@ import 'screens/home_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(
-    url: 'https://hqosvrayudkgyocemgtt.supabase.co',
-    anonKey: 'sb_publishable_vVefdCCOUXkfycwXE6RjDQ_sTVaCAiK',
+    url: 'https://utfhzcnaxzpachrtrbdn.supabase.co',
+    anonKey: 'sb_publishable_CCC_uHQtJxnFI6zWtafzSQ_-mEjxaNg',
   );
   runApp(const ScalpTamizhanApp());
 }
