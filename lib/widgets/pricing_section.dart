@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../screens/login_screen.dart';
+import '../screens/payment_screen.dart';
 
 class PricingSection extends StatefulWidget {
   const PricingSection({Key? key}) : super(key: key);
@@ -223,7 +224,7 @@ class _PricingSectionState extends State<PricingSection>
         _buildPricingCard(
           index: 2,
           color: const Color(0xFFF57C00),
-          title: 'BASIC PLAN',   
+          title: 'BASIC PLAN',
           price: '₹23000',
           priceSubtitle: 'Life Time',
           description:
@@ -536,7 +537,7 @@ class _PricingSectionState extends State<PricingSection>
                           ),
                           const SizedBox(height: 20),
                           // Buy Button
-                          _buildBuyButton(color),
+                          _buildBuyButton(color, title, price),
                           const SizedBox(height: 24),
                           // Features
                           ...features.map(
@@ -581,7 +582,7 @@ class _PricingSectionState extends State<PricingSection>
     );
   }
 
-  Widget _buildBuyButton(Color cardColor) {
+  Widget _buildBuyButton(Color cardColor, String planName, String planPrice) {
     return Container(
       width: double.infinity,
       height: 48, // Slightly reduced
@@ -607,14 +608,13 @@ class _PricingSectionState extends State<PricingSection>
                 MaterialPageRoute(builder: (context) => const LoginScreen()),
               );
             } else {
-              // User is logged in, proceed with purchase logic (leave it for now)
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Proceeding to payment...',
-                    style: TextStyle(color: Colors.black),
-                  ),
-                  backgroundColor: Color(0xFFCDFF00),
+              // Navigate to Payment Screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) =>
+                          PaymentScreen(planName: planName, price: planPrice),
                 ),
               );
             }

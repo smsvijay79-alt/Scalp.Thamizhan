@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../screens/login_screen.dart';
+import '../screens/profile_screen.dart';
 
 class CustomNavigationBar extends StatefulWidget {
   final Function(String) onNavigate;
@@ -181,6 +182,26 @@ class _CustomNavigationBarState extends State<CustomNavigationBar> {
                           ),
                         ),
                         const PopupMenuItem<String>(
+                          value: 'profile',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.person_outline,
+                                color: Colors.black,
+                                size: 20,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'My Profile & Courses',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem<String>(
                           value: 'logout',
                           child: Row(
                             children: [
@@ -201,6 +222,13 @@ class _CustomNavigationBarState extends State<CustomNavigationBar> {
                     onSelected: (value) {
                       if (value == 'logout') {
                         _showLogoutConfirmation(context);
+                      } else if (value == 'profile') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ProfileScreen(),
+                          ),
+                        );
                       }
                     },
                     child: Container(
