@@ -779,7 +779,7 @@ class _DifferentiatorsSectionState extends State<DifferentiatorsSection>
               ),
               _buildTopIcon(
                 icon: Icons.fitness_center,
-                label: 'Fitness Health',
+                label: 'Discipline growth',
                 color: const Color(0xFF388E3C),
                 delay: 0.33,
               ),

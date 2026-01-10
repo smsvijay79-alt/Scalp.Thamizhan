@@ -31,14 +31,14 @@ class FooterSection extends StatelessWidget {
                 children: [
                   // Left Section - Logo and Contact
                   SizedBox(
-                    width: 500,
+                    width: 1000,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Logo
                         Container(
-                          width: 200,
-                          height: 200,
+                          width: 1000,
+                          height: 1000,
                           decoration: BoxDecoration(
                             color: const Color(0xFF2a2a2a),
                             borderRadius: BorderRadius.circular(12),
@@ -51,7 +51,7 @@ class FooterSection extends StatelessWidget {
                                 child: Icon(
                                   Icons.image,
                                   color: Colors.white38,
-                                  size: 40,
+                                  size: 150,
                                 ),
                               );
                             },

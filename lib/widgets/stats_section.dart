@@ -118,7 +118,7 @@ class _StatsSectionState extends State<StatsSection>
           width: verticalDivider,
           height: height - topHeight,
           child: _buildCard(
-            metric: '247',
+            metric: '24/7',
             description: 'Support',
             alignment: Alignment.center,
             padding: const EdgeInsets.only(left: 48, right: 32, top: 32, bottom: 32),

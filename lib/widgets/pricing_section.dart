@@ -200,27 +200,6 @@ class _PricingSectionState extends State<PricingSection>
         _buildPricingCard(
           index: 1,
           color: const Color(0xFF2E7D32),
-          iconText: 'Ax',
-          title: 'BASIC PLAN',
-          price: '₹23000',
-          priceSubtitle: 'Life Time',
-          description:
-              'The AlchemyX Trading Program Helps Traders Master Forex And US Futures Through Structured, Pre-Recorded Lessons And 1-Year Discord Mentorship. Learn, Apply, And Grow With Real-Time Market Experience And Expert Guidance.',
-          features: [
-            'Pre-Recorded HD Lessons On Forex & US Futures',
-            '1-Year Discord Mentorship & Daily Support',
-            'Weekly Live NY Sessions For Real-Time Learning',
-            'Bi-Weekly Giveaways For Top Traders',
-            'Active Community To Learn And Grow',
-          ],
-          isPopular: true,
-          scale: 1.0,
-        ),
-        SizedBox(width: cardSpacing),
-        // Medium box - Intermediate (₹18000)
-        _buildPricingCard(
-          index: 2,
-          color: const Color(0xFFF57C00),
           title: 'INTERMEDIATE',
           price: '₹18000',
           priceSubtitle: 'per year',
@@ -232,6 +211,29 @@ class _PricingSectionState extends State<PricingSection>
             'Build tour Trading Skills',
             'Physiology = Disciple and Patience',
             'Step by Step Track Program',
+            'Build tour Trading Skills',
+            'Physiology = Disciple and Patience',
+            'Step by Step Track Program',
+          ],
+          isPopular: true,
+          scale: 1.0,
+        ),
+        SizedBox(width: cardSpacing),
+        // Medium box - Intermediate (₹18000)
+        _buildPricingCard(
+          index: 2,
+          color: const Color(0xFFF57C00),
+          title: 'BASIC PLAN',   
+          price: '₹23000',
+          priceSubtitle: 'Life Time',
+          description:
+              'The Basic Plan Trading Program Helps Traders Master Forex And US Futures Through Structured, Pre-Recorded Lessons And 1-Year Discord Mentorship. Learn, Apply, And Grow With Real-Time Market Experience And Expert Guidance.',
+          features: [
+            'Pre-Recorded HD Lessons On Forex & US Futures',
+            '1-Year Discord Mentorship & Daily Support',
+            'Weekly Live NY Sessions For Real-Time Learning',
+            'Bi-Weekly Giveaways For Top Traders',
+            'Active Community To Learn And Grow',
           ],
           scale: 0.95,
         ),
