@@ -58,7 +58,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   style: TextStyle(color: Colors.white),
                 ),
                 content: const Text(
-                  'Your payment details have been sent for verification. You will get access once the admin verifies the transaction.',
+                  'Your payment details have been sent for verification. You will be able to see the videos once the admin verified your payment status.',
                   style: TextStyle(color: Colors.white70),
                 ),
                 actions: [

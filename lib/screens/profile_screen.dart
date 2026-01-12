@@ -12,6 +12,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _supabase = Supabase.instance.client;
   bool _isLoading = true;
   List<Map<String, dynamic>> _verifiedPlans = [];
+  List<Map<String, dynamic>> _pendingPlans = [];
   List<Map<String, dynamic>> _availableVideos = [];
 
   @override
@@ -26,17 +27,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final user = _supabase.auth.currentUser;
       if (user == null) return;
 
-      // 1. Fetch verified payments
+      // 1. Fetch all user payments
       final paymentsResponse = await _supabase
           .from('payments')
           .select()
-          .eq('user_id', user.id)
-          .eq('status', 'verified');
+          .eq('user_id', user.id);
 
-      _verifiedPlans = List<Map<String, dynamic>>.from(paymentsResponse);
+      final allPayments = List<Map<String, dynamic>>.from(paymentsResponse);
+
+      // Separate verified and pending
+      _verifiedPlans =
+          allPayments.where((p) => p['status'] == 'verified').toList();
+      _pendingPlans =
+          allPayments.where((p) => p['status'] == 'pending').toList();
 
       if (_verifiedPlans.isNotEmpty) {
-        // 2. Fetch videos matching those plans
+        // 2. Fetch videos matching verified plans
         final planNames = _verifiedPlans.map((p) => p['plan_name']).toList();
         final videosResponse = await _supabase
             .from('videos')
@@ -100,12 +106,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    if (_verifiedPlans.isEmpty)
+                    if (_verifiedPlans.isEmpty && _pendingPlans.isEmpty)
                       _buildEmptyState(
-                        'No active courses found. Once your payment is verified, your courses will appear here.',
+                        'No active or pending courses found. Complete your purchase to see your progress here.',
                       )
-                    else
+                    else ...[
                       _buildVerifiedPlansList(),
+                      if (_pendingPlans.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        const Text(
+                          'PENDING VERIFICATION',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.1,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildPendingPlansList(),
+                      ],
+                    ],
 
                     const SizedBox(height: 48),
 
@@ -191,24 +212,92 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.verified, color: Colors.green, size: 24),
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.verified,
+                      color: Colors.green,
+                      size: 20,
+                    ),
+                  ),
                   const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        plan['plan_name'],
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          plan['plan_name'],
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
-                      ),
-                      const Text(
-                        'Plan Active & Verified',
-                        style: TextStyle(color: Colors.green, fontSize: 13),
-                      ),
-                    ],
+                        const Text(
+                          'Plan Active & Verified',
+                          style: TextStyle(color: Colors.green, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+    );
+  }
+
+  Widget _buildPendingPlansList() {
+    return Column(
+      children:
+          _pendingPlans.map((plan) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.orange.withOpacity(0.2)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.history,
+                      color: Colors.orange,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          plan['plan_name'],
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const Text(
+                          'Payment Verification Pending',
+                          style: TextStyle(color: Colors.orange, fontSize: 13),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

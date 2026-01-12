@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../screens/login_screen.dart';
 import '../screens/payment_screen.dart';
 
@@ -600,15 +601,64 @@ class _PricingSectionState extends State<PricingSection>
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
+          onTap: () async {
             final session = Supabase.instance.client.auth.currentSession;
             if (session == null) {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const LoginScreen()),
               );
+              return;
+            }
+
+            final String planSlug = planName.toUpperCase();
+
+            if (planSlug.contains('DISCORD')) {
+              // Discord redirection
+              final Uri discordUrl = Uri.parse('https://discord.gg/UNhEJq7ZeP');
+              if (await canLaunchUrl(discordUrl)) {
+                await launchUrl(
+                  discordUrl,
+                  mode: LaunchMode.externalApplication,
+                );
+                // After redirection, still allow them to submit payment if they come back
+                if (mounted) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => PaymentScreen(
+                            planName: planName,
+                            price: planPrice,
+                          ),
+                    ),
+                  );
+                }
+              }
+            } else if (planSlug.contains('INTERMEDIATE')) {
+              // WhatsApp redirection then come back to basic plan
+              final String whatsappUrl =
+                  'https://wa.me/919025436814?text=I%20am%20interested%20in%20the%20Intermediate%20Plan';
+              final Uri uri = Uri.parse(whatsappUrl);
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+                // "Come back to the basic plan" - navigate to payment screen for Basic Plan
+                if (mounted) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => const PaymentScreen(
+                            planName: 'BASIC PLAN',
+                            price: '₹23000',
+                          ),
+                    ),
+                  );
+                }
+              }
             } else {
-              // Navigate to Payment Screen
+              // Standard Basic Plan or others
               Navigator.push(
                 context,
                 MaterialPageRoute(
