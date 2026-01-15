@@ -14,58 +14,62 @@ class _ParticleNetworkBackgroundState extends State<ParticleNetworkBackground>
     with TickerProviderStateMixin {
   late AnimationController _controller;
   late List<Particle> particles;
-  final int particleCount = 100;
+  final int baseParticleCount = 80;
   final double connectionDistance = 100.0;
+  Size? _lastSize;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: Duration(milliseconds: 100), // ~60 FPS
+      duration: const Duration(seconds: 1),
       vsync: this,
     )..repeat();
 
     particles = [];
-    _controller.addListener(() {
-      setState(() {
-        _updateParticles();
-      });
-    });
+    _controller.addListener(_handleTick);
+  }
+
+  void _handleTick() {
+    if (_lastSize != null) {
+      _updateParticles(_lastSize!);
+      setState(() {});
+    }
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_handleTick);
     _controller.dispose();
     super.dispose();
   }
 
   void _initializeParticles(Size size) {
     if (particles.isEmpty) {
+      final isMobile = size.width < 768;
+      final count =
+          (isMobile ? baseParticleCount * 0.4 : baseParticleCount).toInt();
       final random = math.Random();
-      for (int i = 0; i < particleCount; i++) {
+      for (int i = 0; i < count; i++) {
         particles.add(
           Particle(
             x: random.nextDouble() * size.width,
             y: random.nextDouble() * size.height,
-            vx: (random.nextDouble() - 0.5) * 0.5,
-            vy: (random.nextDouble() - 0.5) * 0.5,
-            size: random.nextDouble() * 3 + 1,
-            opacity: random.nextDouble() * 0.8 + 0.2,
+            vx: (random.nextDouble() - 0.5) * 0.4,
+            vy: (random.nextDouble() - 0.5) * 0.4,
+            size: random.nextDouble() * 2 + 1,
+            opacity: random.nextDouble() * 0.5 + 0.2,
           ),
         );
       }
     }
   }
 
-  void _updateParticles() {
-    // Use the actual screen size for particle bounds
-    final size = MediaQuery.of(context).size;
-
+  void _updateParticles(Size size) {
     for (var particle in particles) {
       particle.x += particle.vx;
       particle.y += particle.vy;
 
-      // Bounce off edges
       if (particle.x <= 0 || particle.x >= size.width) {
         particle.vx *= -1;
       }
@@ -73,7 +77,6 @@ class _ParticleNetworkBackgroundState extends State<ParticleNetworkBackground>
         particle.vy *= -1;
       }
 
-      // Keep particles within bounds
       particle.x = particle.x.clamp(0.0, size.width);
       particle.y = particle.y.clamp(0.0, size.height);
     }
@@ -81,32 +84,28 @@ class _ParticleNetworkBackgroundState extends State<ParticleNetworkBackground>
 
   @override
   Widget build(BuildContext context) {
-    // Get the actual screen size
-    final screenSize = MediaQuery.of(context).size;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        _lastSize = Size(constraints.maxWidth, constraints.maxHeight);
+        _initializeParticles(_lastSize!);
 
-    // Initialize particles with screen size
-    _initializeParticles(screenSize);
-
-    return Container(
-      width: screenSize.width,
-      height: screenSize.height,
-      decoration: BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment.center,
-          radius: 1.0,
-          colors: [
-            Color(0xFF0A1A2A), // Dark blue center
-            Color(0xFF051015), // Very dark edges
-          ],
-        ),
-      ),
-      child: CustomPaint(
-        painter: ParticleNetworkPainter(
-          particles: particles,
-          connectionDistance: connectionDistance,
-        ),
-        size: screenSize,
-      ),
+        return Container(
+          decoration: const BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment.center,
+              radius: 1.2,
+              colors: [Color(0xFF0A1A2A), Color(0xFF051015)],
+            ),
+          ),
+          child: CustomPaint(
+            painter: ParticleNetworkPainter(
+              particles: particles,
+              connectionDistance: connectionDistance,
+            ),
+            size: _lastSize!,
+          ),
+        );
+      },
     );
   }
 }

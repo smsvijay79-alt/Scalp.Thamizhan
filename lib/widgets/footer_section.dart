@@ -15,123 +15,41 @@ class FooterSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 768;
+
     return Container(
       width: double.infinity,
       color: Colors.transparent,
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 60),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 20 : 40,
+        vertical: 60,
+      ),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1400),
           child: Column(
             children: [
               // Main Footer Content
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Left Section - Logo and Contact
-                  SizedBox(
-                    width: 1000,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Logo
-                        Container(
-                          width: 1000,
-                          height: 1000,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2a2a2a),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Image.asset(
-                            'assets/logo.jpg',
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Center(
-                                child: Icon(
-                                  Icons.image,
-                                  color: Colors.white38,
-                                  size: 150,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-                        // Divider
-                        Container(
-                          width: 140,
-                          height: 1,
-                          color: const Color(0xFF2a2a2a),
-                        ),
-                        const SizedBox(height: 25),
-                        // Social Icons
-                        Row(
-                          children: [
-                            _buildSocialIcon(
-                              FontAwesomeIcons.instagram,
-                              'https://instagram.com',
-                            ),
-                            const SizedBox(width: 12),
-                            _buildSocialIcon(
-                              FontAwesomeIcons.youtube,
-                              'https://youtube.com',
-                            ),
-                            const SizedBox(width: 12),
-                            _buildSocialIcon(
-                              FontAwesomeIcons.discord,
-                              'https://discord.gg/UNhEJq7ZeP',
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 30),
-                        // Contact Info
-                        _buildContactLink(
-                          'support@Scalp.tamizhan.in',
-                          'mailto:support@Scalp.tamizhan.in',
-                        ),
-                        const SizedBox(height: 12),
-                        _buildContactLink(
-                          '+91 90254 36814',
-                          'tel:+919025436814',
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Right Section - Footer Columns
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildFooterColumn('PAGES', [
-                          {'text': 'Home', 'url': '#home'},
-                          {'text': 'About Us', 'url': '#about'},
-                          {'text': 'Courses', 'url': '#plan'},
-                          {'text': 'Testimonials', 'url': '#testimonials'},
-                          {'text': 'FAQs', 'url': '#faq'},
-                        ]),
-                        const SizedBox(width: 80),
-                        _buildFooterColumn('PRIVACY POLICY', [
-                          {'text': 'Terms And Conditions', 'url': '#'},
-                          {
-                            'text': 'Responsible Risk Disclosure Policy',
-                            'url': '#',
-                          },
-                          {'text': 'Refund Policy', 'url': '#'},
-                          {'text': 'Disclaimer', 'url': '#'},
-                        ]),
-                        const SizedBox(width: 80),
-                        _buildFooterColumn('COURSES', [
-                          {'text': 'Discord Subscription', 'url': '#'},
-                          {'text': 'AlchemyX Trading Program', 'url': '#'},
-                          {'text': 'Personal Mentorship', 'url': '#'},
-                        ]),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              if (isMobile)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildLeftSection(isMobile),
+                    const SizedBox(height: 50),
+                    _buildRightSection(isMobile),
+                  ],
+                )
+              else
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(flex: 3, child: _buildLeftSection(isMobile)),
+                    const SizedBox(width: 48),
+                    Expanded(flex: 7, child: _buildRightSection(isMobile)),
+                  ],
+                ),
               const SizedBox(height: 60),
               // Copyright
               Container(
@@ -152,6 +70,120 @@ class FooterSection extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildLeftSection(bool isMobile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Logo
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: const Color(0xFF2a2a2a),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.asset(
+              'assets/logo.jpg',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return const Center(
+                  child: Icon(Icons.image, color: Colors.white38, size: 30),
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 30),
+        // Divider
+        Container(width: 140, height: 1, color: const Color(0xFF2a2a2a)),
+        const SizedBox(height: 25),
+        // Social Icons
+        Row(
+          children: [
+            _buildSocialIcon(
+              FontAwesomeIcons.instagram,
+              'https://instagram.com',
+            ),
+            const SizedBox(width: 12),
+            _buildSocialIcon(FontAwesomeIcons.youtube, 'https://youtube.com'),
+            const SizedBox(width: 12),
+            _buildSocialIcon(
+              FontAwesomeIcons.discord,
+              'https://discord.gg/UNhEJq7ZeP',
+            ),
+          ],
+        ),
+        const SizedBox(height: 30),
+        // Contact Info
+        _buildContactLink(
+          'support@Scalp.tamizhan.in',
+          'mailto:support@Scalp.tamizhan.in',
+        ),
+        const SizedBox(height: 12),
+        _buildContactLink('+91 90254 36814', 'tel:+919025436814'),
+      ],
+    );
+  }
+
+  Widget _buildRightSection(bool isMobile) {
+    if (isMobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildFooterColumn('PAGES', [
+            {'text': 'Home', 'url': '#home'},
+            {'text': 'About Us', 'url': '#about'},
+            {'text': 'Courses', 'url': '#plan'},
+            {'text': 'Testimonials', 'url': '#testimonials'},
+            {'text': 'FAQs', 'url': '#faq'},
+          ]),
+          const SizedBox(height: 40),
+          _buildFooterColumn('PRIVACY POLICY', [
+            {'text': 'Terms And Conditions', 'url': '#'},
+            {'text': 'Responsible Risk Disclosure Policy', 'url': '#'},
+            {'text': 'Refund Policy', 'url': '#'},
+            {'text': 'Disclaimer', 'url': '#'},
+          ]),
+          const SizedBox(height: 40),
+          _buildFooterColumn('COURSES', [
+            {'text': 'Discord Subscription', 'url': '#'},
+            {'text': 'AlchemyX Trading Program', 'url': '#'},
+            {'text': 'Personal Mentorship', 'url': '#'},
+          ]),
+        ],
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFooterColumn('PAGES', [
+          {'text': 'Home', 'url': '#home'},
+          {'text': 'About Us', 'url': '#about'},
+          {'text': 'Courses', 'url': '#plan'},
+          {'text': 'Testimonials', 'url': '#testimonials'},
+          {'text': 'FAQs', 'url': '#faq'},
+        ]),
+        const SizedBox(width: 60),
+        _buildFooterColumn('PRIVACY POLICY', [
+          {'text': 'Terms And Conditions', 'url': '#'},
+          {'text': 'Responsible Risk Disclosure Policy', 'url': '#'},
+          {'text': 'Refund Policy', 'url': '#'},
+          {'text': 'Disclaimer', 'url': '#'},
+        ]),
+        const SizedBox(width: 60),
+        _buildFooterColumn('COURSES', [
+          {'text': 'Discord Subscription', 'url': '#'},
+          {'text': 'AlchemyX Trading Program', 'url': '#'},
+          {'text': 'Personal Mentorship', 'url': '#'},
+        ]),
+      ],
     );
   }
 
@@ -186,7 +218,7 @@ class FooterSection extends StatelessWidget {
 
   Widget _buildFooterColumn(String title, List<Map<String, String>> links) {
     return SizedBox(
-      width: 220,
+      width: 180,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

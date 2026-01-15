@@ -3,7 +3,6 @@ import 'package:visibility_detector/visibility_detector.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../screens/login_screen.dart';
-import '../screens/payment_screen.dart';
 
 class PricingSection extends StatefulWidget {
   const PricingSection({Key? key}) : super(key: key);
@@ -612,62 +611,13 @@ class _PricingSectionState extends State<PricingSection>
             }
 
             final String planSlug = planName.toUpperCase();
+            final double amount = double.parse(
+              planPrice.replaceAll(RegExp(r'[^0-9]'), ''),
+            );
 
-            if (planSlug.contains('DISCORD')) {
-              // Discord redirection
-              final Uri discordUrl = Uri.parse('https://discord.gg/UNhEJq7ZeP');
-              if (await canLaunchUrl(discordUrl)) {
-                await launchUrl(
-                  discordUrl,
-                  mode: LaunchMode.externalApplication,
-                );
-                // After redirection, still allow them to submit payment if they come back
-                if (mounted) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => PaymentScreen(
-                            planName: planName,
-                            price: planPrice,
-                          ),
-                    ),
-                  );
-                }
-              }
-            } else if (planSlug.contains('INTERMEDIATE')) {
-              // WhatsApp redirection then come back to basic plan
-              final String whatsappUrl =
-                  'https://wa.me/919025436814?text=I%20am%20interested%20in%20the%20Intermediate%20Plan';
-              final Uri uri = Uri.parse(whatsappUrl);
-              if (await canLaunchUrl(uri)) {
-                await launchUrl(uri, mode: LaunchMode.externalApplication);
-
-                // "Come back to the basic plan" - navigate to payment screen for Basic Plan
-                if (mounted) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => const PaymentScreen(
-                            planName: 'BASIC PLAN',
-                            price: '₹23000',
-                          ),
-                    ),
-                  );
-                }
-              }
-            } else {
-              // Standard Basic Plan or others
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (context) =>
-                          PaymentScreen(planName: planName, price: planPrice),
-                ),
-              );
-            }
+            // Razorpay logic placeholder
+            // In a production app, you would use the razorpay_flutter package here
+            _processRazorpayPayment(context, planName, amount, planSlug);
           },
           borderRadius: BorderRadius.circular(30),
           child: Padding(
@@ -709,5 +659,73 @@ class _PricingSectionState extends State<PricingSection>
         ),
       ),
     );
+  }
+
+  Future<void> _processRazorpayPayment(
+    BuildContext context,
+    String planName,
+    double amount,
+    String planSlug,
+  ) async {
+    // This is where you would trigger the Razorpay UI
+    // For now, we simulate a successful payment and save to Supabase
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => const Center(
+            child: CircularProgressIndicator(color: Color(0xFFCDFF00)),
+          ),
+    );
+
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) throw Exception('User not logged in');
+
+      // Simulate a Razorpay success callback
+      final String paymentId = 'pay_${DateTime.now().millisecondsSinceEpoch}';
+
+      await Supabase.instance.client.from('payments').insert({
+        'user_id': user.id,
+        'user_email': user.email,
+        'plan_name': planName,
+        'amount': amount,
+        'razorpay_payment_id': paymentId,
+        'status': 'paid',
+      });
+
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading dialog
+
+      // Handle post-payment redirection or confirmation
+      if (planSlug.contains('DISCORD')) {
+        final Uri razorpayUrl = Uri.parse('https://rzp.io/rzp/GDjdEkj');
+        if (await canLaunchUrl(razorpayUrl)) {
+          await launchUrl(razorpayUrl, mode: LaunchMode.externalApplication);
+        }
+      } else if (planSlug.contains('INTERMEDIATE')) {
+        final Uri razorpayUrl = Uri.parse('https://rzp.io/rzp/O3KM9Qq');
+        if (await canLaunchUrl(razorpayUrl)) {
+          await launchUrl(razorpayUrl, mode: LaunchMode.externalApplication);
+        }
+      } else {
+        // Basic Plan
+        final Uri razorpayUrl = Uri.parse('https://rzp.io/rzp/pQ9QhDp');
+        if (await canLaunchUrl(razorpayUrl)) {
+          await launchUrl(razorpayUrl, mode: LaunchMode.externalApplication);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Payment Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -22,6 +23,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadProfileData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
       final user = _supabase.auth.currentUser;
@@ -35,26 +37,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       final allPayments = List<Map<String, dynamic>>.from(paymentsResponse);
 
-      // Separate verified and pending
+      // Separate verified/paid and pending
+      // Treat both 'verified' and 'paid' (automated) as active
       _verifiedPlans =
-          allPayments.where((p) => p['status'] == 'verified').toList();
+          allPayments
+              .where((p) => p['status'] == 'verified' || p['status'] == 'paid')
+              .toList();
       _pendingPlans =
           allPayments.where((p) => p['status'] == 'pending').toList();
 
       if (_verifiedPlans.isNotEmpty) {
         // 2. Fetch videos matching verified plans
-        final planNames = _verifiedPlans.map((p) => p['plan_name']).toList();
-        final videosResponse = await _supabase
-            .from('videos')
-            .select()
-            .inFilter('plan_required', planNames);
+        // We match by checking if the video's plan_required matches any of our owned plans
+        final planNames =
+            _verifiedPlans
+                .map((p) => p['plan_name'].toString().toUpperCase())
+                .toList();
 
-        _availableVideos = List<Map<String, dynamic>>.from(videosResponse);
+        final videosResponse = await _supabase.from('videos').select();
+
+        final allVideos = List<Map<String, dynamic>>.from(videosResponse);
+
+        // Filter videos manually to ensure case-insensitive and robust matching
+        _availableVideos =
+            allVideos.where((video) {
+              final required =
+                  video['plan_required']?.toString().toUpperCase() ?? '';
+              return planNames.any(
+                (owned) => owned.contains(required) || required.contains(owned),
+              );
+            }).toList();
       }
     } catch (e) {
       debugPrint('Error loading profile: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _watchVideo(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open video link')),
+        );
+      }
     }
   }
 
@@ -67,89 +97,103 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          'My Profile',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadProfileData,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 120,
+            floating: true,
+            pinned: true,
+            backgroundColor: const Color(0xFF0F172A),
+            elevation: 0,
+            flexibleSpace: FlexibleSpaceBar(
+              title: const Text(
+                'Learning Hub',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              centerTitle: false,
+              titlePadding: const EdgeInsets.only(left: 24, bottom: 16),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh, color: Color(0xFFCDFF00)),
+                onPressed: _loadProfileData,
+              ),
+              const SizedBox(width: 8),
+            ],
+          ),
+          SliverToBoxAdapter(
+            child:
+                _isLoading
+                    ? SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.6,
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFFCDFF00),
+                        ),
+                      ),
+                    )
+                    : Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildProfileHeader(displayName, email),
+                          const SizedBox(height: 40),
+
+                          _buildSectionTitle('ACTIVE PLANS'),
+                          const SizedBox(height: 16),
+                          if (_verifiedPlans.isEmpty && _pendingPlans.isEmpty)
+                            _buildEmptyState(
+                              Icons.shopping_cart_outlined,
+                              'No courses yet. Start your trading journey today!',
+                            )
+                          else ...[
+                            _buildVerifiedPlansList(),
+                            if (_pendingPlans.isNotEmpty) ...[
+                              const SizedBox(height: 24),
+                              _buildSectionTitle(
+                                'VERIFYING PAYMENT',
+                                isSub: true,
+                              ),
+                              const SizedBox(height: 12),
+                              _buildPendingPlansList(),
+                            ],
+                          ],
+
+                          const SizedBox(height: 40),
+
+                          _buildSectionTitle('COURSE VIDEOS'),
+                          const SizedBox(height: 16),
+                          if (_availableVideos.isEmpty)
+                            _buildEmptyState(
+                              Icons.lock_outline,
+                              'Purchase a plan to unlock premium video content.',
+                            )
+                          else
+                            _buildVideosGrid(),
+                          const SizedBox(height: 80),
+                        ],
+                      ),
+                    ),
           ),
         ],
       ),
-      body:
-          _isLoading
-              ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFFCDFF00)),
-              )
-              : SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // User Profile Section
-                    _buildProfileHeader(displayName, email),
-                    const SizedBox(height: 48),
+    );
+  }
 
-                    // My Courses Section
-                    const Text(
-                      'MY COURSES',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    if (_verifiedPlans.isEmpty && _pendingPlans.isEmpty)
-                      _buildEmptyState(
-                        'No active or pending courses found. Complete your purchase to see your progress here.',
-                      )
-                    else ...[
-                      _buildVerifiedPlansList(),
-                      if (_pendingPlans.isNotEmpty) ...[
-                        const SizedBox(height: 24),
-                        const Text(
-                          'PENDING VERIFICATION',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.1,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildPendingPlansList(),
-                      ],
-                    ],
-
-                    const SizedBox(height: 48),
-
-                    // Content Section
-                    const Text(
-                      'COURSE CONTENT',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    if (_availableVideos.isEmpty)
-                      _buildEmptyState(
-                        'Complete your purchase and verification to view course videos.',
-                      )
-                    else
-                      _buildVideosGrid(),
-                  ],
-                ),
-              ),
+  Widget _buildSectionTitle(String title, {bool isSub = false}) {
+    return Text(
+      title,
+      style: TextStyle(
+        color: isSub ? Colors.white60 : Colors.white,
+        fontSize: isSub ? 14 : 18,
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.2,
+      ),
     );
   }
 
@@ -157,20 +201,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        gradient: LinearGradient(
+          colors: [const Color(0xFF1E293B), const Color(0xFF0F172A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
             width: 80,
             height: 80,
-            decoration: const BoxDecoration(
-              color: Color(0xFFCDFF00),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFCDFF00), Color(0xFFD4FF33)],
+              ),
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFCDFF00).withOpacity(0.3),
+                  blurRadius: 15,
+                  spreadRadius: 2,
+                ),
+              ],
             ),
-            child: const Icon(Icons.person, color: Colors.black, size: 40),
+            child: const Icon(
+              Icons.person_rounded,
+              color: Colors.black,
+              size: 40,
+            ),
           ),
           const SizedBox(width: 20),
           Expanded(
@@ -181,14 +249,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   name,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   email,
-                  style: const TextStyle(color: Colors.white60, fontSize: 16),
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.5),
+                    fontSize: 14,
+                  ),
                 ),
               ],
             ),
@@ -204,45 +275,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _verifiedPlans.map((plan) {
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: const Color(0xFF10B981).withOpacity(0.05),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.green.withOpacity(0.3)),
+                border: Border.all(
+                  color: const Color(0xFF10B981).withOpacity(0.2),
+                ),
               ),
               child: Row(
                 children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.verified,
-                      color: Colors.green,
-                      size: 20,
-                    ),
+                  const Icon(
+                    Icons.check_circle,
+                    color: Color(0xFF10B981),
+                    size: 24,
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          plan['plan_name'],
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const Text(
-                          'Plan Active & Verified',
-                          style: TextStyle(color: Colors.green, fontSize: 13),
-                        ),
-                      ],
+                    child: Text(
+                      plan['plan_name'],
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'ACTIVE',
+                      style: TextStyle(
+                        color: Color(0xFF10B981),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
@@ -258,7 +332,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _pendingPlans.map((plan) {
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.orange.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(16),
@@ -266,37 +340,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: Row(
                 children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.history,
-                      color: Colors.orange,
-                      size: 20,
-                    ),
+                  const Icon(
+                    Icons.access_time_filled,
+                    color: Colors.orange,
+                    size: 24,
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          plan['plan_name'],
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const Text(
-                          'Payment Verification Pending',
-                          style: TextStyle(color: Colors.orange, fontSize: 13),
-                        ),
-                      ],
+                    child: Text(
+                      plan['plan_name'],
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ],
@@ -314,85 +371,150 @@ class _ProfileScreenState extends State<ProfileScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 1.5,
+        childAspectRatio: 0.85,
       ),
       itemCount: _availableVideos.length,
       itemBuilder: (context, index) {
         final video = _availableVideos[index];
-        return Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E293B),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Placeholder for video thumbnail
-              Expanded(
-                child: Container(
-                  width: double.infinity,
-                  color: Colors.black26,
-                  child: const Center(
-                    child: Icon(
-                      Icons.play_circle_fill,
-                      color: Color(0xFFCDFF00),
-                      size: 40,
+        final String videoUrl = video['video_url'] ?? '';
+
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: videoUrl.isNotEmpty ? () => _watchVideo(videoUrl) : null,
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Colors.black54, Colors.black26],
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                            ),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.play_circle_fill_rounded,
+                              color: Color(0xFFCDFF00),
+                              size: 48,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 12,
+                          right: 12,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black45,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              'Premium',
+                              style: TextStyle(
+                                color: Color(0xFFCDFF00),
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      video['title'],
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          video['title'] ?? 'Untitled Lesson',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            height: 1.3,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.folder_open,
+                              color: Colors.white30,
+                              size: 12,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                video['plan_required'] ?? 'All Plans',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white30,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      video['plan_required'] ?? '',
-                      style: const TextStyle(
-                        color: Color(0xFFCDFF00),
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },
     );
   }
 
-  Widget _buildEmptyState(String message) {
+  Widget _buildEmptyState(IconData icon, String message) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 32),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B).withOpacity(0.5),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        color: const Color(0xFF1E293B).withOpacity(0.3),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withOpacity(0.02)),
       ),
       child: Column(
         children: [
-          Icon(Icons.lock_clock, color: Colors.white24, size: 48),
-          const SizedBox(height: 16),
+          Icon(icon, color: Colors.white10, size: 64),
+          const SizedBox(height: 20),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white38, fontSize: 14),
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.3),
+              fontSize: 14,
+              height: 1.5,
+            ),
           ),
         ],
       ),

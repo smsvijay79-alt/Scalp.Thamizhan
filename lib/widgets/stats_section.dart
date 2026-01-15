@@ -22,11 +22,12 @@ class _StatsSectionState extends State<StatsSection>
       duration: const Duration(milliseconds: 16),
     )..addListener(() {
       setState(() {
-        _mousePosition = Offset.lerp(
-          _mousePosition,
-          _targetPosition,
-          0.12, // Smoother interpolation
-        )!;
+        _mousePosition =
+            Offset.lerp(
+              _mousePosition,
+              _targetPosition,
+              0.12, // Smoother interpolation
+            )!;
       });
     });
     _controller.repeat();
@@ -40,6 +41,8 @@ class _StatsSectionState extends State<StatsSection>
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 768;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 24),
@@ -47,30 +50,101 @@ class _StatsSectionState extends State<StatsSection>
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 900),
-          child: MouseRegion(
-            onHover: (event) {
-              _targetPosition = event.localPosition;
-            },
-            child: AspectRatio(
-              aspectRatio: 900 / 600,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return CustomPaint(
-                    painter: GridGlowPainter(
-                      _mousePosition,
-                      constraints.maxWidth,
-                      constraints.maxHeight,
+          child: Column(
+            children: [
+              if (isMobile)
+                _buildMobileContent()
+              else
+                MouseRegion(
+                  onHover: (event) {
+                    _targetPosition = event.localPosition;
+                  },
+                  child: AspectRatio(
+                    aspectRatio: 900 / 600,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return CustomPaint(
+                          painter: GridGlowPainter(
+                            _mousePosition,
+                            constraints.maxWidth,
+                            constraints.maxHeight,
+                          ),
+                          child: _buildGridContent(
+                            constraints.maxWidth,
+                            constraints.maxHeight,
+                          ),
+                        );
+                      },
                     ),
-                    child: _buildGridContent(
-                      constraints.maxWidth,
-                      constraints.maxHeight,
-                    ),
-                  );
-                },
-              ),
-            ),
+                  ),
+                ),
+            ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildMobileContent() {
+    return Wrap(
+      spacing: 24,
+      runSpacing: 40,
+      alignment: WrapAlignment.center,
+      children: [
+        _buildMobileCard('1000', '+', 'Traders'),
+        _buildMobileCard('800', '+', 'Members make a payout'),
+        _buildMobileCard('24/7', null, 'Support'),
+        _buildMobileCard('12', null, 'Mentors'),
+      ],
+    );
+  }
+
+  Widget _buildMobileCard(
+    String metric,
+    String? metricSuffix,
+    String description,
+  ) {
+    return Container(
+      width: 160,
+      child: Column(
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                metric,
+                style: const TextStyle(
+                  fontSize: 42,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  letterSpacing: -1,
+                ),
+              ),
+              if (metricSuffix != null)
+                Text(
+                  metricSuffix,
+                  style: const TextStyle(
+                    fontSize: 42,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF22C55E),
+                    letterSpacing: -1,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            description,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[500],
+              height: 1.4,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -94,7 +168,12 @@ class _StatsSectionState extends State<StatsSection>
             metricSuffix: '+',
             description: 'Traders',
             alignment: Alignment.center,
-            padding: const EdgeInsets.only(left: 48, right: 32, top: 32, bottom: 32),
+            padding: const EdgeInsets.only(
+              left: 48,
+              right: 32,
+              top: 32,
+              bottom: 32,
+            ),
           ),
         ),
         // Top Right Card
@@ -121,7 +200,12 @@ class _StatsSectionState extends State<StatsSection>
             metric: '24/7',
             description: 'Support',
             alignment: Alignment.center,
-            padding: const EdgeInsets.only(left: 48, right: 32, top: 32, bottom: 32),
+            padding: const EdgeInsets.only(
+              left: 48,
+              right: 32,
+              top: 32,
+              bottom: 32,
+            ),
           ),
         ),
         // Bottom Right Card
@@ -154,9 +238,10 @@ class _StatsSectionState extends State<StatsSection>
         alignment: alignment,
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: alignment == Alignment.center
-              ? CrossAxisAlignment.center
-              : CrossAxisAlignment.start,
+          crossAxisAlignment:
+              alignment == Alignment.center
+                  ? CrossAxisAlignment.center
+                  : CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -189,9 +274,10 @@ class _StatsSectionState extends State<StatsSection>
             const SizedBox(height: 16),
             Text(
               description,
-              textAlign: alignment == Alignment.center
-                  ? TextAlign.center
-                  : TextAlign.left,
+              textAlign:
+                  alignment == Alignment.center
+                      ? TextAlign.center
+                      : TextAlign.left,
               style: TextStyle(
                 fontSize: 15,
                 color: Colors.grey[500],
@@ -223,17 +309,22 @@ class GridGlowPainter extends CustomPainter {
     final List<Line> gridLines = [
       Line(Offset(verticalDivider, 0), Offset(verticalDivider, height)),
       Line(Offset(0, topHeight), Offset(verticalDivider, topHeight)),
-      Line(Offset(verticalDivider, topRightOffset),
-          Offset(width, topRightOffset)),
-      Line(Offset(verticalDivider, bottomRightOffset),
-          Offset(width, bottomRightOffset)),
+      Line(
+        Offset(verticalDivider, topRightOffset),
+        Offset(width, topRightOffset),
+      ),
+      Line(
+        Offset(verticalDivider, bottomRightOffset),
+        Offset(width, bottomRightOffset),
+      ),
     ];
 
     // Draw base dark grid lines with subtle color
-    final darkPaint = Paint()
-      ..color = const Color(0xFF2A2A2A)
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke;
+    final darkPaint =
+        Paint()
+          ..color = const Color(0xFF2A2A2A)
+          ..strokeWidth = 1.5
+          ..style = PaintingStyle.stroke;
 
     for (var line in gridLines) {
       canvas.drawLine(line.start, line.end, darkPaint);
@@ -248,7 +339,11 @@ class GridGlowPainter extends CustomPainter {
   }
 
   void _drawGlowingLine(
-      Canvas canvas, Line line, Offset cursor, double glowRadius) {
+    Canvas canvas,
+    Line line,
+    Offset cursor,
+    double glowRadius,
+  ) {
     final closestPoint = _closestPointOnLine(line.start, line.end, cursor);
     final distance = (closestPoint - cursor).distance;
 
@@ -292,12 +387,13 @@ class GridGlowPainter extends CustomPainter {
         [0.0, 0.5, 1.0],
       );
 
-      final glowPaint = Paint()
-        ..shader = gradient
-        ..strokeWidth = 1.5 + i * 1.5
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, i * 3.5);
+      final glowPaint =
+          Paint()
+            ..shader = gradient
+            ..strokeWidth = 1.5 + i * 1.5
+            ..style = PaintingStyle.stroke
+            ..strokeCap = StrokeCap.round
+            ..maskFilter = MaskFilter.blur(BlurStyle.normal, i * 3.5);
 
       canvas.drawLine(glowStart, glowEnd, glowPaint);
     }
@@ -316,29 +412,31 @@ class GridGlowPainter extends CustomPainter {
       [0.0, 0.2, 0.5, 0.8, 1.0],
     );
 
-    final corePaint = Paint()
-      ..shader = coreGradient
-      ..strokeWidth = 2.8
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+    final corePaint =
+        Paint()
+          ..shader = coreGradient
+          ..strokeWidth = 2.8
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round;
 
     canvas.drawLine(glowStart, glowEnd, corePaint);
 
     // Add refined center point glow
-    final centerPaint = Paint()
-      ..shader = ui.Gradient.radial(
-        centerOnLine,
-        25.0,
-        [
-          Color(0xFFFFFFFF).withOpacity(ultraSmooth * 0.3),
-          Color(0xFF22C55E).withOpacity(ultraSmooth * 0.8),
-          Color(0xFF10B981).withOpacity(ultraSmooth * 0.4),
-          Color(0xFF22C55E).withOpacity(0),
-        ],
-        [0.0, 0.3, 0.6, 1.0],
-      )
-      ..style = PaintingStyle.fill
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10.0);
+    final centerPaint =
+        Paint()
+          ..shader = ui.Gradient.radial(
+            centerOnLine,
+            25.0,
+            [
+              Color(0xFFFFFFFF).withOpacity(ultraSmooth * 0.3),
+              Color(0xFF22C55E).withOpacity(ultraSmooth * 0.8),
+              Color(0xFF10B981).withOpacity(ultraSmooth * 0.4),
+              Color(0xFF22C55E).withOpacity(0),
+            ],
+            [0.0, 0.3, 0.6, 1.0],
+          )
+          ..style = PaintingStyle.fill
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10.0);
 
     canvas.drawCircle(centerOnLine, 25.0, centerPaint);
   }
@@ -366,7 +464,8 @@ class GridGlowPainter extends CustomPainter {
 
     if (lineLength == 0) return lineStart;
 
-    final t = (pointVec.dx * lineVec.dx + pointVec.dy * lineVec.dy) /
+    final t =
+        (pointVec.dx * lineVec.dx + pointVec.dy * lineVec.dy) /
         (lineLength * lineLength);
     final clampedT = t.clamp(0.0, 1.0);
 

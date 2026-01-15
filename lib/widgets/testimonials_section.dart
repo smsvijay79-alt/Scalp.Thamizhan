@@ -119,13 +119,16 @@ class _TestimonialsSectionState extends State<TestimonialsSection>
   }
 
   Widget _buildLeftSection() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 768;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Testimonials',
           style: TextStyle(
-            fontSize: 60,
+            fontSize: isMobile ? 42 : 60,
             fontWeight: FontWeight.w800,
             color: Colors.white,
             height: 1.0,
@@ -188,34 +191,29 @@ class _TestimonialsSectionState extends State<TestimonialsSection>
   }
 
   Widget _buildTestimonialsList() {
-    return Container(
-      constraints: const BoxConstraints(maxHeight: 600),
-      child: ListView.builder(
-        controller: _scrollController,
-        itemCount: _testimonials.length,
-        itemBuilder: (context, index) {
-          return AnimatedBuilder(
-            animation: _cardControllers[index],
-            builder: (context, child) {
-              return Transform.translate(
-                offset: Offset(0, 20 * (1 - _cardControllers[index].value)),
-                child: Opacity(
-                  opacity: _cardControllers[index].value,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: _buildTestimonialCard(
-                      name: _testimonials[index]['name']!,
-                      location: _testimonials[index]['location']!,
-                      avatarPath: _testimonials[index]['avatar']!,
-                      testimonial: _testimonials[index]['text']!,
-                    ),
+    return Column(
+      children: List.generate(_testimonials.length, (index) {
+        return AnimatedBuilder(
+          animation: _cardControllers[index],
+          builder: (context, child) {
+            return Transform.translate(
+              offset: Offset(0, 20 * (1 - _cardControllers[index].value)),
+              child: Opacity(
+                opacity: _cardControllers[index].value,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: _buildTestimonialCard(
+                    name: _testimonials[index]['name']!,
+                    location: _testimonials[index]['location']!,
+                    avatarPath: _testimonials[index]['avatar']!,
+                    testimonial: _testimonials[index]['text']!,
                   ),
                 ),
-              );
-            },
-          );
-        },
-      ),
+              ),
+            );
+          },
+        );
+      }),
     );
   }
 

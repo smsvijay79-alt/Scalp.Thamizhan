@@ -111,81 +111,97 @@ class _HeroSectionState extends State<HeroSection>
           const SizedBox(height: 60),
 
           // Slider Button
-          _buildSliderButton(isMobile ? 320.0 : 400.0),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final sliderWidth = math.min(
+                constraints.maxWidth,
+                isMobile ? 320.0 : 400.0,
+              );
+              return _buildSliderButton(sliderWidth);
+            },
+          ),
         ],
       ),
     );
   }
 
   Widget _buildSocialProofBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.374),
-        borderRadius: BorderRadius.circular(50),
-        boxShadow: [
-          BoxShadow(color: Colors.white.withOpacity(0.3), blurRadius: 8),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Avatars - No animation
-          SizedBox(
-            width: 110,
-            height: 32,
-            child: Stack(
-              children: List.generate(4, (index) {
-                return Positioned(
-                  left: index * 22.0,
-                  top: 0,
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                      image: DecorationImage(
-                        image: AssetImage('assets/testi${index + 1}.png'),
-                        fit: BoxFit.cover,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.grey.withOpacity(0.374),
+            borderRadius: BorderRadius.circular(50),
+            boxShadow: [
+              BoxShadow(color: Colors.white.withOpacity(0.3), blurRadius: 8),
+            ],
+          ),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              // Avatars
+              SizedBox(
+                width: 110,
+                height: 32,
+                child: Stack(
+                  children: List.generate(4, (index) {
+                    return Positioned(
+                      left: index * 22.0,
+                      top: 0,
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                          image: DecorationImage(
+                            image: AssetImage('assets/testi${index + 1}.png'),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-          const SizedBox(width: 40),
-          const Text(
-            'Risk is better than regret',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: _scrollToPricingSection,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: const Text(
-                'Join Us 🎉 →',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                    );
+                  }),
                 ),
               ),
-            ),
+              const Text(
+                'Risk is better than regret',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              GestureDetector(
+                onTap: _scrollToPricingSection,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  child: const Text(
+                    'Join Us 🎉 →',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

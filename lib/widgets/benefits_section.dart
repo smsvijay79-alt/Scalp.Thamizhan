@@ -142,15 +142,27 @@ class _BenefitsSectionState extends State<BenefitsSection>
               runSpacing: 24,
               alignment: WrapAlignment.center,
               children: [
-                _buildCard(0, _buildLivestreamVisual(), 'Livestream Sessions',
-                    'Live London & New York session streams (FOREX & US Futures - Tue, Wed, Thu, Fri) with real-time market analysis and doubt clearing.',
-                    const Color(0xFFCDDC39)),
-                _buildCard(1, _buildWeekendVisual(), 'Weekend Doubt Sessions',
-                    'Special sessions for working professionals to clarify concepts and stay consistent.',
-                    const Color(0xFFA78BFA)),
-                _buildCard(2, _buildMentorVisual(), 'Direct Mentor Guidance',
-                    'Ask any doubt anytime - we explain it simply and clearly until you get it.',
-                    const Color(0xFF3B82F6)),
+                _buildCard(
+                  0,
+                  _buildLivestreamVisual(),
+                  'Livestream Sessions',
+                  'Live London & New York session streams (FOREX & US Futures - Tue, Wed, Thu, Fri) with real-time market analysis and doubt clearing.',
+                  const Color(0xFFCDDC39),
+                ),
+                _buildCard(
+                  1,
+                  _buildWeekendVisual(),
+                  'Weekend Doubt Sessions',
+                  'Special sessions for working professionals to clarify concepts and stay consistent.',
+                  const Color(0xFFA78BFA),
+                ),
+                _buildCard(
+                  2,
+                  _buildMentorVisual(),
+                  'Direct Mentor Guidance',
+                  'Ask any doubt anytime - we explain it simply and clearly until you get it.',
+                  const Color(0xFF3B82F6),
+                ),
               ],
             ),
           ],
@@ -159,49 +171,61 @@ class _BenefitsSectionState extends State<BenefitsSection>
     );
   }
 
-  Widget _buildCard(int index, Widget visual, String title, String description, Color borderColor) {
+  Widget _buildCard(
+    int index,
+    Widget visual,
+    String title,
+    String description,
+    Color borderColor,
+  ) {
     final isHovered = _hoveredIndex == index;
 
     return AnimatedBuilder(
       animation: _cardControllers[index],
       builder: (context, child) {
-        return Transform.scale(
-          scale: 0.9 + (_cardControllers[index].value * 0.1),
-          child: Opacity(
-            opacity: _cardControllers[index].value,
-            child: MouseRegion(
-              onEnter: (_) => setState(() => _hoveredIndex = index),
-              onExit: (_) => setState(() => _hoveredIndex = null),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                width: 380,
-                height: 520,
-                padding: const EdgeInsets.all(0),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.03),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: isHovered ? borderColor.withOpacity(0.6) : borderColor.withOpacity(0.3),
-                    width: 2,
-                  ),
-                  boxShadow: isHovered ? [
-                    BoxShadow(
-                      color: borderColor.withOpacity(0.3),
-                      blurRadius: 30,
-                      spreadRadius: 5,
+        return Container(
+          constraints: const BoxConstraints(maxWidth: 380),
+          child: Transform.scale(
+            scale: 0.9 + (_cardControllers[index].value * 0.1),
+            child: Opacity(
+              opacity: _cardControllers[index].value,
+              child: MouseRegion(
+                onEnter: (_) => setState(() => _hoveredIndex = index),
+                onExit: (_) => setState(() => _hoveredIndex = null),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.all(0),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.03),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color:
+                          isHovered
+                              ? borderColor.withOpacity(0.6)
+                              : borderColor.withOpacity(0.3),
+                      width: 2,
                     ),
-                  ] : [],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    visual,
-                    Expanded(
-                      child: Padding(
+                    boxShadow:
+                        isHovered
+                            ? [
+                              BoxShadow(
+                                color: borderColor.withOpacity(0.3),
+                                blurRadius: 30,
+                                spreadRadius: 5,
+                              ),
+                            ]
+                            : [],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      visual,
+                      Padding(
                         padding: const EdgeInsets.all(24),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               title,
@@ -223,8 +247,8 @@ class _BenefitsSectionState extends State<BenefitsSection>
                           ],
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -242,10 +266,7 @@ class _BenefitsSectionState extends State<BenefitsSection>
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF2D3A1F),
-            Color(0xFF1A1F14),
-          ],
+          colors: [Color(0xFF2D3A1F), Color(0xFF1A1F14)],
         ),
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
@@ -284,13 +305,18 @@ class _BenefitsSectionState extends State<BenefitsSection>
               animation: _liveBadgeController,
               builder: (context, child) {
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF44336),
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFF44336).withOpacity(_liveBadgeController.value * 0.8),
+                        color: const Color(
+                          0xFFF44336,
+                        ).withOpacity(_liveBadgeController.value * 0.8),
                         blurRadius: 15,
                         spreadRadius: 3,
                       ),
@@ -348,10 +374,7 @@ class _BenefitsSectionState extends State<BenefitsSection>
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF2E1F4A),
-            Color(0xFF1A1129),
-          ],
+          colors: [Color(0xFF2E1F4A), Color(0xFF1A1129)],
         ),
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
@@ -407,10 +430,7 @@ class _BenefitsSectionState extends State<BenefitsSection>
                     children: [
                       const Text(
                         'Weekend',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
                       ),
                       Icon(
                         Icons.more_horiz,
@@ -480,10 +500,7 @@ class _BenefitsSectionState extends State<BenefitsSection>
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1E3A5F),
-            Color(0xFF0F1E33),
-          ],
+          colors: [Color(0xFF1E3A5F), Color(0xFF0F1E33)],
         ),
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
@@ -609,16 +626,9 @@ class _BenefitsSectionState extends State<BenefitsSection>
       decoration: BoxDecoration(
         color: Colors.black.withOpacity(0.5),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.5),
-          width: 2,
-        ),
+        border: Border.all(color: color.withOpacity(0.5), width: 2),
       ),
-      child: Icon(
-        icon,
-        color: color,
-        size: 20,
-      ),
+      child: Icon(icon, color: color, size: 20),
     );
   }
 }
@@ -626,9 +636,10 @@ class _BenefitsSectionState extends State<BenefitsSection>
 class GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFCDDC39).withOpacity(0.1)
-      ..strokeWidth = 1;
+    final paint =
+        Paint()
+          ..color = const Color(0xFFCDDC39).withOpacity(0.1)
+          ..strokeWidth = 1;
 
     // Vertical lines
     for (double i = 0; i < size.width; i += 30) {
@@ -652,11 +663,12 @@ class ChartLinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFCDDC39)
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
+    final paint =
+        Paint()
+          ..color = const Color(0xFFCDDC39)
+          ..strokeWidth = 3
+          ..strokeCap = StrokeCap.round
+          ..style = PaintingStyle.stroke;
 
     final path = Path();
     final points = [
@@ -679,9 +691,10 @@ class ChartLinePainter extends CustomPainter {
     canvas.drawPath(path, paint);
 
     // Draw points
-    final pointPaint = Paint()
-      ..color = const Color(0xFFCDDC39)
-      ..style = PaintingStyle.fill;
+    final pointPaint =
+        Paint()
+          ..color = const Color(0xFFCDDC39)
+          ..style = PaintingStyle.fill;
 
     for (var point in points) {
       canvas.drawCircle(point, 4, pointPaint);
@@ -689,5 +702,6 @@ class ChartLinePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(ChartLinePainter oldDelegate) => oldDelegate.progress != progress;
+  bool shouldRepaint(ChartLinePainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }

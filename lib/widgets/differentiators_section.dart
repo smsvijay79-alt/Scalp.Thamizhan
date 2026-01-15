@@ -264,14 +264,12 @@ class _DifferentiatorsSectionState extends State<DifferentiatorsSection>
   }
 
   Widget _buildPerformanceCard() {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     const pricingGreen = Color(0xFF2E7D32);
-    const pricingGreenLight = Color(
-      0xFF43A047,
-    ); // A slightly lighter shade for gradient
+    const pricingGreenLight = Color(0xFF43A047);
 
     return Container(
-      constraints: const BoxConstraints(maxWidth: 220),
-      height: 500,
+      constraints: BoxConstraints(maxWidth: isMobile ? double.infinity : 400),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
@@ -287,6 +285,7 @@ class _DifferentiatorsSectionState extends State<DifferentiatorsSection>
           ),
         ],
       ),
+      clipBehavior: Clip.antiAlias,
       padding: const EdgeInsets.all(28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -350,7 +349,7 @@ class _DifferentiatorsSectionState extends State<DifferentiatorsSection>
               },
             ),
           ),
-          const Spacer(),
+          const SizedBox(height: 24),
           // Content section
           Container(
             padding: const EdgeInsets.all(22),
@@ -371,7 +370,7 @@ class _DifferentiatorsSectionState extends State<DifferentiatorsSection>
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   '\$10,000 Funded\nAccount',
                   style: TextStyle(
                     color: Colors.white,
@@ -487,12 +486,12 @@ class _DifferentiatorsSectionState extends State<DifferentiatorsSection>
   }
 
   Widget _buildGuidanceCard() {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     const pricingGreen = Color(0xFF2E7D32);
     const pricingGreenLight = Color(0xFF43A047);
 
     return Container(
-      constraints: const BoxConstraints(maxWidth: 220),
-      height: 500,
+      constraints: BoxConstraints(maxWidth: isMobile ? double.infinity : 400),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
@@ -508,6 +507,7 @@ class _DifferentiatorsSectionState extends State<DifferentiatorsSection>
           ),
         ],
       ),
+      clipBehavior: Clip.antiAlias,
       padding: const EdgeInsets.all(28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -536,7 +536,7 @@ class _DifferentiatorsSectionState extends State<DifferentiatorsSection>
             color: const Color(0xFF7B1FA2),
             isComplete: false,
           ),
-          const Spacer(),
+          const SizedBox(height: 32),
           // Animated Live guidance box
           AnimatedBuilder(
             animation: _pulseController,
@@ -610,7 +610,7 @@ class _DifferentiatorsSectionState extends State<DifferentiatorsSection>
               );
             },
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 32),
           // Bottom text
           const Text(
             'Guidance in Cracking\nFunded Accounts',
@@ -742,12 +742,12 @@ class _DifferentiatorsSectionState extends State<DifferentiatorsSection>
   }
 
   Widget _buildHolisticCard() {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     const pricingGreen = Color(0xFF2E7D32);
     const pricingGreenLight = Color(0xFF43A047);
 
     return Container(
-      constraints: const BoxConstraints(maxWidth: 220),
-      height: 500,
+      constraints: BoxConstraints(maxWidth: isMobile ? double.infinity : 400),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
@@ -763,6 +763,7 @@ class _DifferentiatorsSectionState extends State<DifferentiatorsSection>
           ),
         ],
       ),
+      clipBehavior: Clip.antiAlias,
       padding: const EdgeInsets.all(28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -791,7 +792,7 @@ class _DifferentiatorsSectionState extends State<DifferentiatorsSection>
               ),
             ],
           ),
-          const Spacer(),
+          const SizedBox(height: 32),
           // Overall progress card with continuous loading
           AnimatedBuilder(
             animation: _progressController,
@@ -962,7 +963,7 @@ class _DifferentiatorsSectionState extends State<DifferentiatorsSection>
               );
             },
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 32),
           // Bottom text
           const Text(
             'More Than Just\nCharts',

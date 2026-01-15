@@ -16,13 +16,14 @@ class _PropFirmsSectionState extends State<PropFirmsSection>
   late List<AnimationController> _hoverControllers;
 
   final List<String> _propFirmImages = [
+    'assets/cert1.png',
     'assets/cert2.jpeg',
     'assets/cert3.jpeg',
     'assets/cert4.jpeg',
     'assets/cert5.jpeg',
     'assets/cert6.jpeg',
-    'assets/cert7.jpeg',
   ];
+  
 
   @override
   void initState() {

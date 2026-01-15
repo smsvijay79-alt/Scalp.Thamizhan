@@ -15,6 +15,9 @@ class CTASection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 768;
+
     return Container(
       width: double.infinity,
       color: Colors.transparent,
@@ -58,14 +61,17 @@ class CTASection extends StatelessWidget {
               ),
               // Main content
               Container(
-                padding: const EdgeInsets.fromLTRB(60, 80, 60, 80),
+                padding: EdgeInsets.fromLTRB(
+                  isMobile ? 24 : 60,
+                  80,
+                  isMobile ? 24 : 60,
+                  80,
+                ),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [  Color(0xFF3A3A3A),
-                      Color(0xFF2E2E2E),
-                    ],
+                    colors: [Color(0xFF3A3A3A), Color(0xFF2E2E2E)],
                   ),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
@@ -78,11 +84,11 @@ class CTASection extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       'Wanna Trade Live With Us',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 56,
+                        fontSize: isMobile ? 36 : 56,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
                         height: 1.2,
@@ -113,15 +119,17 @@ class CTASection extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildDivider(),
-                        const SizedBox(width: 20),
+                        if (!isMobile) ...[
+                          _buildDivider(),
+                          const SizedBox(width: 20),
+                        ],
                         ElevatedButton(
                           onPressed: _launchDiscord,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF00ee83),
                             foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 48,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isMobile ? 32 : 48,
                               vertical: 16,
                             ),
                             shape: RoundedRectangleBorder(
@@ -129,16 +137,18 @@ class CTASection extends StatelessWidget {
                             ),
                             elevation: 4,
                           ),
-                          child: const Text(
+                          child: Text(
                             'Join Discord',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: isMobile ? 16 : 18,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 20),
-                        _buildDivider(),
+                        if (!isMobile) ...[
+                          const SizedBox(width: 20),
+                          _buildDivider(),
+                        ],
                       ],
                     ),
                   ],
@@ -157,10 +167,7 @@ class CTASection extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -202,4 +209,3 @@ class CTASection extends StatelessWidget {
     );
   }
 }
-
