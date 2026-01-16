@@ -713,7 +713,7 @@ class _PricingSectionState extends State<PricingSection>
         }
       } else {
         // Basic Plan
-        final Uri razorpayUrl = Uri.parse('https://rzp.io/rzp/pQ9QhDp');
+        final Uri razorpayUrl = Uri.parse('https://rzp.io/rzp/AhfJNfM');
         if (await canLaunchUrl(razorpayUrl)) {
           await launchUrl(razorpayUrl, mode: LaunchMode.externalApplication);
         }
