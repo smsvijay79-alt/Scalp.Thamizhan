@@ -347,234 +347,235 @@ class _PricingSectionState extends State<PricingSection>
           final hoverScale = 1.0 + (_hoverControllers[index].value * 0.03);
           return Transform.scale(
             scale: scale * hoverScale,
-            child: Transform.translate(
-              offset: Offset(0, -_hoverControllers[index].value * 10),
-              child: Container(
-                width: cardWidth,
-                margin: EdgeInsets.only(
-                  top: isPopular ? 0 : 20, // Lift the popular card less
-                  bottom: isPopular ? 20 : 0, // Drop non-popular cards
-                ),
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(24),
-                  border:
-                      isPopular
-                          ? Border.all(
-                            color: Colors.white.withOpacity(0.3),
-                            width: 4,
-                          )
-                          : null,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(
-                        0.3 + _hoverControllers[index].value * 0.2,
-                      ),
-                      blurRadius: 20 + _hoverControllers[index].value * 10,
-                      offset: Offset(
-                        0,
-                        10 + _hoverControllers[index].value * 5,
-                      ),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    // Scanning overlay
-                    AnimatedBuilder(
-                      animation: _scanControllers[index],
-                      builder: (context, child) {
-                        return Positioned.fill(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(24),
-                            child: Transform.translate(
-                              offset: Offset(
-                                (MediaQuery.of(context).size.width * 2) *
-                                    (_scanControllers[index].value - 0.5),
-                                0,
-                              ),
-                              child: Transform(
-                                transform: Matrix4.skewX(-0.2),
-                                child: Container(
-                                  width: 200,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.transparent,
-                                        Colors.white.withOpacity(0.2),
-                                        Colors.transparent,
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    // Popular badge
-                    if (isPopular)
-                      Positioned(
-                        top: -10,
-                        right: 20,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFCDFF00),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: const Text(
-                            'MOST POPULAR',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
+            child: RepaintBoundary(
+              child: Transform.translate(
+                offset: Offset(0, -_hoverControllers[index].value * 10),
+                child: Container(
+                  width: cardWidth,
+                  margin: EdgeInsets.only(
+                    top: isPopular ? 0 : 20, // Lift the popular card less
+                    bottom: isPopular ? 20 : 0, // Drop non-popular cards
+                  ),
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(24),
+                    border:
+                        isPopular
+                            ? Border.all(
+                              color: Colors.white.withOpacity(0.3),
+                              width: 4,
+                            )
+                            : null,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(
+                          0.3 + _hoverControllers[index].value * 0.2,
+                        ),
+                        blurRadius: 20 + _hoverControllers[index].value * 10,
+                        offset: Offset(
+                          0,
+                          10 + _hoverControllers[index].value * 5,
                         ),
                       ),
-                    // Content
-                    Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Icon and Title
-                          Row(
-                            children: [
-                              if (icon != null)
-                                Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Icon(
-                                    icon,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                )
-                              else if (iconText != null)
-                                Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    iconText,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  title,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          // Price
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                price,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 36, // Slightly reduced
-                                  fontWeight: FontWeight.bold,
-                                  height: 1,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: Text(
-                                  priceSubtitle,
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.8),
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          // Description
-                          Text(
-                            description,
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 13, // Slightly reduced
-                              height: 1.5,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          // Buy Button
-                          _buildBuyButton(color, title, price),
-                          const SizedBox(height: 24),
-                          // Features
-                          ...features.map(
-                            (feature) => Padding(
-                              padding: const EdgeInsets.only(bottom: 14),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    margin: const EdgeInsets.only(top: 2),
-                                    child: Icon(
-                                      Icons.check_circle,
-                                      color: Colors.white.withOpacity(0.9),
-                                      size: 16,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      feature,
-                                      style: TextStyle(
-                                        color: Colors.white.withOpacity(0.9),
-                                        fontSize: 13, // Slightly reduced
-                                        height: 1.4,
+                    ],
+                  ),
+                  child: Stack(
+                    children: [
+                      // Scanning overlay
+                      Positioned.fill(
+                        child: AnimatedBuilder(
+                          animation: _scanControllers[index],
+                          builder: (context, child) {
+                            final shift =
+                                (MediaQuery.of(context).size.width * 2) *
+                                (_scanControllers[index].value - 0.5);
+                            return ClipRRect(
+                              borderRadius: BorderRadius.circular(24),
+                              child: Transform.translate(
+                                offset: Offset(shift, 0),
+                                child: Transform(
+                                  transform: Matrix4.skewX(-0.2),
+                                  child: Container(
+                                    width: 200,
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Colors.transparent,
+                                          Colors.white.withOpacity(0.2),
+                                          Colors.transparent,
+                                        ],
                                       ),
                                     ),
                                   ),
-                                ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      // Popular badge
+                      if (isPopular)
+                        Positioned(
+                          top: -10,
+                          right: 20,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFCDFF00),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: const Text(
+                              'MOST POPULAR',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
                               ),
                             ),
                           ),
-                        ],
+                        ),
+                      // Content
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Icon and Title
+                            Row(
+                              children: [
+                                if (icon != null)
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      icon,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  )
+                                else if (iconText != null)
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      iconText,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    title,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            // Price
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  price,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 36, // Slightly reduced
+                                    fontWeight: FontWeight.bold,
+                                    height: 1,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: Text(
+                                    priceSubtitle,
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.8),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // Description
+                            Text(
+                              description,
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 13, // Slightly reduced
+                                height: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            // Buy Button
+                            _buildBuyButton(color, title, price),
+                            const SizedBox(height: 24),
+                            // Features
+                            ...features.map(
+                              (feature) => Padding(
+                                padding: const EdgeInsets.only(bottom: 14),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      margin: const EdgeInsets.only(top: 2),
+                                      child: Icon(
+                                        Icons.check_circle,
+                                        color: Colors.white.withOpacity(0.9),
+                                        size: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        feature,
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.9),
+                                          fontSize: 13, // Slightly reduced
+                                          height: 1.4,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -684,18 +685,6 @@ class _PricingSectionState extends State<PricingSection>
     try {
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) throw Exception('User not logged in');
-
-      // Simulate a Razorpay success callback
-      final String paymentId = 'pay_${DateTime.now().millisecondsSinceEpoch}';
-
-      await Supabase.instance.client.from('payments').insert({
-        'user_id': user.id,
-        'user_email': user.email,
-        'plan_name': planName,
-        'amount': amount,
-        'razorpay_payment_id': paymentId,
-        'status': 'paid',
-      });
 
       if (!mounted) return;
       Navigator.pop(context); // Close loading dialog

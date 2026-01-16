@@ -69,8 +69,104 @@ class _CustomNavigationBarState extends State<CustomNavigationBar> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 768;
+    final isMobile =
+        MediaQuery.of(context).size.width <
+        1024; // Match PricingSection threshold
 
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildTopBar(context, isMobile),
+        if (isMobile && _isMobileMenuOpen)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            color: Colors.white,
+            child: Column(
+              children: [
+                _buildMobileNavLink('Home', () {
+                  widget.onNavigate('home');
+                  setState(() => _isMobileMenuOpen = false);
+                }),
+                _buildMobileNavLink('Plan', () {
+                  widget.onNavigate('plan');
+                  setState(() => _isMobileMenuOpen = false);
+                }),
+                _buildMobileNavLink('About', () {
+                  widget.onNavigate('about');
+                  setState(() => _isMobileMenuOpen = false);
+                }),
+                _buildMobileNavLink('Testimonials', () {
+                  widget.onNavigate('testimonials');
+                  setState(() => _isMobileMenuOpen = false);
+                }),
+                _buildMobileNavLink('FAQ', () {
+                  widget.onNavigate('faq');
+                  setState(() => _isMobileMenuOpen = false);
+                }),
+                const Divider(indent: 40, endIndent: 40),
+                if (_isLoggedIn) ...[
+                  _buildMobileNavLink('My Profile', () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileScreen(),
+                      ),
+                    );
+                    setState(() => _isMobileMenuOpen = false);
+                  }),
+                  _buildMobileNavLink(
+                    'Logout',
+                    () => _showLogoutConfirmation(context),
+                    isDestructive: true,
+                  ),
+                ] else
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFCDFF00),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const LoginScreen(),
+                              ),
+                            );
+                            setState(() => _isMobileMenuOpen = false);
+                          },
+                          borderRadius: BorderRadius.circular(30),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Center(
+                              child: Text(
+                                'LOGIN',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildTopBar(BuildContext context, bool isMobile) {
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: isMobile ? 20 : 60,
@@ -100,21 +196,17 @@ class _CustomNavigationBarState extends State<CustomNavigationBar> {
                 ),
               ),
               const SizedBox(width: 10),
-              Column(
+              const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    children: [
-                      const Text(
-                        'Scalp.tamizhan',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    'Scalp.tamizhan',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black,
+                    ),
                   ),
                 ],
               ),
@@ -122,20 +214,19 @@ class _CustomNavigationBarState extends State<CustomNavigationBar> {
           ),
 
           // Desktop Navigation
-          if (!isMobile) ...[
+          if (!isMobile)
             Row(
               children: [
                 _buildNavLink('Home', () => widget.onNavigate('home')),
                 const SizedBox(width: 40),
-                _buildNavLink('Courses', () => widget.onNavigate('plan')),
+                _buildNavLink('Plan', () => widget.onNavigate('plan')),
                 const SizedBox(width: 40),
-                _buildNavLink('About Us', () => widget.onNavigate('about')),
+                _buildNavLink('About', () => widget.onNavigate('about')),
                 const SizedBox(width: 40),
                 _buildNavLink(
                   'Testimonials',
                   () => widget.onNavigate('testimonials'),
                 ),
-                const SizedBox(width: 40),
                 const SizedBox(width: 40),
                 _buildNavLink('FAQ', () => widget.onNavigate('faq')),
                 const SizedBox(width: 40),
@@ -148,7 +239,6 @@ class _CustomNavigationBarState extends State<CustomNavigationBar> {
                     itemBuilder: (context) {
                       final user = Supabase.instance.client.auth.currentUser;
                       final email = user?.email ?? 'User';
-                      // Try to get name from metadata, fallback to email username or 'User'
                       String displayName = 'User';
                       if (user?.userMetadata != null &&
                           user!.userMetadata!['full_name'] != null) {
@@ -191,7 +281,7 @@ class _CustomNavigationBarState extends State<CustomNavigationBar> {
                                 size: 20,
                               ),
                               SizedBox(width: 8),
-                              Text(
+                              const Text(
                                 'My Profile & Courses',
                                 style: TextStyle(
                                   color: Colors.black,
@@ -207,7 +297,7 @@ class _CustomNavigationBarState extends State<CustomNavigationBar> {
                             children: [
                               Icon(Icons.logout, color: Colors.red, size: 20),
                               SizedBox(width: 8),
-                              Text(
+                              const Text(
                                 'Logout',
                                 style: TextStyle(
                                   color: Colors.red,
@@ -285,11 +375,8 @@ class _CustomNavigationBarState extends State<CustomNavigationBar> {
                     ),
                   ),
               ],
-            ),
-          ],
-
-          // Mobile Menu Icon
-          if (isMobile)
+            )
+          else
             IconButton(
               icon: Icon(
                 _isMobileMenuOpen ? Icons.close : Icons.menu,
@@ -319,6 +406,25 @@ class _CustomNavigationBarState extends State<CustomNavigationBar> {
             fontWeight: FontWeight.w500,
             fontSize: 16,
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileNavLink(
+    String text,
+    VoidCallback onTap, {
+    bool isDestructive = false,
+  }) {
+    return ListTile(
+      onTap: onTap,
+      title: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: isDestructive ? Colors.red : Colors.black,
+          fontWeight: FontWeight.w600,
+          fontSize: 18,
         ),
       ),
     );

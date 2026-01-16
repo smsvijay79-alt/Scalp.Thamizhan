@@ -16,7 +16,6 @@ class _ParticleNetworkBackgroundState extends State<ParticleNetworkBackground>
   late List<Particle> particles;
   final int baseParticleCount = 80;
   final double connectionDistance = 100.0;
-  Size? _lastSize;
 
   @override
   void initState() {
@@ -27,19 +26,10 @@ class _ParticleNetworkBackgroundState extends State<ParticleNetworkBackground>
     )..repeat();
 
     particles = [];
-    _controller.addListener(_handleTick);
-  }
-
-  void _handleTick() {
-    if (_lastSize != null) {
-      _updateParticles(_lastSize!);
-      setState(() {});
-    }
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_handleTick);
     _controller.dispose();
     super.dispose();
   }
@@ -47,8 +37,9 @@ class _ParticleNetworkBackgroundState extends State<ParticleNetworkBackground>
   void _initializeParticles(Size size) {
     if (particles.isEmpty) {
       final isMobile = size.width < 768;
+      // Drastically reduce particles on mobile for performance
       final count =
-          (isMobile ? baseParticleCount * 0.4 : baseParticleCount).toInt();
+          (isMobile ? baseParticleCount * 0.3 : baseParticleCount).toInt();
       final random = math.Random();
       for (int i = 0; i < count; i++) {
         particles.add(
@@ -86,8 +77,8 @@ class _ParticleNetworkBackgroundState extends State<ParticleNetworkBackground>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        _lastSize = Size(constraints.maxWidth, constraints.maxHeight);
-        _initializeParticles(_lastSize!);
+        final size = Size(constraints.maxWidth, constraints.maxHeight);
+        _initializeParticles(size);
 
         return Container(
           decoration: const BoxDecoration(
@@ -97,12 +88,16 @@ class _ParticleNetworkBackgroundState extends State<ParticleNetworkBackground>
               colors: [Color(0xFF0A1A2A), Color(0xFF051015)],
             ),
           ),
-          child: CustomPaint(
-            painter: ParticleNetworkPainter(
-              particles: particles,
-              connectionDistance: connectionDistance,
+          child: RepaintBoundary(
+            child: CustomPaint(
+              painter: ParticleNetworkPainter(
+                particles: particles,
+                connectionDistance: connectionDistance,
+                repaint: _controller,
+                onUpdate: () => _updateParticles(size),
+              ),
+              size: size,
             ),
-            size: _lastSize!,
           ),
         );
       },
@@ -131,25 +126,32 @@ class Particle {
 class ParticleNetworkPainter extends CustomPainter {
   final List<Particle> particles;
   final double connectionDistance;
+  final VoidCallback onUpdate;
 
   ParticleNetworkPainter({
     required this.particles,
     required this.connectionDistance,
-  });
+    required Listenable repaint,
+    required this.onUpdate,
+  }) : super(repaint: repaint);
 
   @override
   void paint(Canvas canvas, Size size) {
+    onUpdate();
+
+    final isMobile = size.width < 768;
+
     // Draw connections first (so they appear behind particles)
-    _drawConnections(canvas);
+    _drawConnections(canvas, isMobile);
 
     // Draw particles
-    _drawParticles(canvas);
+    _drawParticles(canvas, isMobile);
   }
 
-  void _drawConnections(Canvas canvas) {
+  void _drawConnections(Canvas canvas, bool isMobile) {
     final connectionPaint =
         Paint()
-          ..strokeWidth = 0.8
+          ..strokeWidth = isMobile ? 0.5 : 0.8
           ..style = PaintingStyle.stroke;
 
     for (int i = 0; i < particles.length; i++) {
@@ -165,19 +167,26 @@ class ParticleNetworkPainter extends CustomPainter {
         if (distance < connectionDistance) {
           final opacity = (1 - distance / connectionDistance) * 0.6;
 
-          // Create gradient for the connection line
-          final shader = ui.Gradient.linear(
-            Offset(particle1.x, particle1.y),
-            Offset(particle2.x, particle2.y),
-            [
-              Color(0xFF00FFB3).withOpacity(opacity),
-              Color(0xFF14F195).withOpacity(opacity * 0.7),
-              Color(0xFF00D4FF).withOpacity(opacity * 0.5),
-            ],
-            [0.0, 0.5, 1.0],
-          );
-
-          connectionPaint.shader = shader;
+          if (isMobile) {
+            // Simpler paint on mobile
+            connectionPaint.shader = null;
+            connectionPaint.color = const Color(
+              0xFF00FFB3,
+            ).withOpacity(opacity * 0.5);
+          } else {
+            // Create gradient for the connection line
+            final shader = ui.Gradient.linear(
+              Offset(particle1.x, particle1.y),
+              Offset(particle2.x, particle2.y),
+              [
+                Color(0xFF00FFB3).withOpacity(opacity),
+                Color(0xFF14F195).withOpacity(opacity * 0.7),
+                Color(0xFF00D4FF).withOpacity(opacity * 0.5),
+              ],
+              [0.0, 0.5, 1.0],
+            );
+            connectionPaint.shader = shader;
+          }
 
           canvas.drawLine(
             Offset(particle1.x, particle1.y),
@@ -189,36 +198,47 @@ class ParticleNetworkPainter extends CustomPainter {
     }
   }
 
-  void _drawParticles(Canvas canvas) {
+  void _drawParticles(Canvas canvas, bool isMobile) {
     for (var particle in particles) {
-      // Outer glow
-      final glowPaint =
-          Paint()
-            ..color = Color(0xFF00FFB3).withOpacity(particle.opacity * 0.3)
-            ..maskFilter = MaskFilter.blur(BlurStyle.normal, particle.size * 2);
+      if (!isMobile) {
+        // Outer glow is expensive, skip on mobile
+        final glowPaint =
+            Paint()
+              ..color = Color(0xFF00FFB3).withOpacity(particle.opacity * 0.3)
+              ..maskFilter = MaskFilter.blur(
+                BlurStyle.normal,
+                particle.size * 2,
+              );
 
-      canvas.drawCircle(
-        Offset(particle.x, particle.y),
-        particle.size * 3,
-        glowPaint,
-      );
+        canvas.drawCircle(
+          Offset(particle.x, particle.y),
+          particle.size * 3,
+          glowPaint,
+        );
+      }
 
-      // Main particle with gradient
-      final particlePaint =
-          Paint()
-            ..shader = RadialGradient(
-              colors: [
-                Color(0xFF00FFB3).withOpacity(particle.opacity),
-                Color(0xFF14F195).withOpacity(particle.opacity * 0.8),
-                Color(0xFF00D4FF).withOpacity(particle.opacity * 0.6),
-              ],
-              stops: [0.0, 0.7, 1.0],
-            ).createShader(
-              Rect.fromCircle(
-                center: Offset(particle.x, particle.y),
-                radius: particle.size,
-              ),
-            );
+      // Main particle
+      final particlePaint = Paint();
+
+      if (isMobile) {
+        particlePaint.color = const Color(
+          0xFF00FFB3,
+        ).withOpacity(particle.opacity);
+      } else {
+        particlePaint.shader = RadialGradient(
+          colors: [
+            Color(0xFF00FFB3).withOpacity(particle.opacity),
+            Color(0xFF14F195).withOpacity(particle.opacity * 0.8),
+            Color(0xFF00D4FF).withOpacity(particle.opacity * 0.6),
+          ],
+          stops: [0.0, 0.7, 1.0],
+        ).createShader(
+          Rect.fromCircle(
+            center: Offset(particle.x, particle.y),
+            radius: particle.size,
+          ),
+        );
+      }
 
       canvas.drawCircle(
         Offset(particle.x, particle.y),
@@ -226,22 +246,24 @@ class ParticleNetworkPainter extends CustomPainter {
         particlePaint,
       );
 
-      // Inner bright core
-      final corePaint =
-          Paint()
-            ..color = Color(0xFFFFFFFF).withOpacity(particle.opacity * 0.9);
+      // Inner bright core (only if not too tiny)
+      if (particle.size > 1.5) {
+        final corePaint =
+            Paint()
+              ..color = Color(0xFFFFFFFF).withOpacity(particle.opacity * 0.9);
 
-      canvas.drawCircle(
-        Offset(particle.x, particle.y),
-        particle.size * 0.3,
-        corePaint,
-      );
+        canvas.drawCircle(
+          Offset(particle.x, particle.y),
+          particle.size * 0.3,
+          corePaint,
+        );
+      }
     }
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true; // Always repaint for animation
+    return true; // Repaint handled by the 'repaint' Listenable
   }
 }
 

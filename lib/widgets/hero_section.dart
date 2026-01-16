@@ -103,7 +103,7 @@ class _HeroSectionState extends State<HeroSection>
           const SizedBox(height: 50),
 
           // Main Heading with Shimmer Effect
-          _buildShimmerHeading(isMobile),
+          RepaintBoundary(child: _buildShimmerHeading(isMobile)),
           const SizedBox(height: 10),
 
           // Subtitle
@@ -117,7 +117,7 @@ class _HeroSectionState extends State<HeroSection>
                 constraints.maxWidth,
                 isMobile ? 320.0 : 400.0,
               );
-              return _buildSliderButton(sliderWidth);
+              return RepaintBoundary(child: _buildSliderButton(sliderWidth));
             },
           ),
         ],

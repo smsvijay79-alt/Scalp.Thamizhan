@@ -58,15 +58,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         final allVideos = List<Map<String, dynamic>>.from(videosResponse);
 
-        // Filter videos manually to ensure case-insensitive and robust matching
+        // Filter videos: user sees a video if its 'plan_required' matches any of their paid plans
         _availableVideos =
             allVideos.where((video) {
               final required =
                   video['plan_required']?.toString().toUpperCase() ?? '';
-              return planNames.any(
-                (owned) => owned.contains(required) || required.contains(owned),
-              );
+
+              // If the video is marked for 'ALL', everyone sees it
+              if (required == 'ALL' || required.isEmpty) return true;
+
+              return planNames.any((owned) {
+                final ownedPlan = owned.toUpperCase();
+                // Match if the plan name contains the required keyword or vice versa
+                // e.g., 'BASIC PLAN' matches 'BASIC'
+                return ownedPlan.contains(required) ||
+                    required.contains(ownedPlan);
+              });
             }).toList();
+      } else {
+        _availableVideos = [];
       }
     } catch (e) {
       debugPrint('Error loading profile: $e');
@@ -144,37 +154,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           _buildProfileHeader(displayName, email),
                           const SizedBox(height: 40),
 
-                          _buildSectionTitle('ACTIVE PLANS'),
-                          const SizedBox(height: 16),
-                          if (_verifiedPlans.isEmpty && _pendingPlans.isEmpty)
-                            _buildEmptyState(
-                              Icons.shopping_cart_outlined,
-                              'No courses yet. Start your trading journey today!',
-                            )
-                          else ...[
+                          if (_verifiedPlans.isNotEmpty) ...[
+                            _buildSectionTitle('ACTIVE PLANS'),
+                            const SizedBox(height: 16),
                             _buildVerifiedPlansList(),
-                            if (_pendingPlans.isNotEmpty) ...[
-                              const SizedBox(height: 24),
-                              _buildSectionTitle(
-                                'VERIFYING PAYMENT',
-                                isSub: true,
-                              ),
-                              const SizedBox(height: 12),
-                              _buildPendingPlansList(),
-                            ],
+                            const SizedBox(height: 40),
                           ],
 
-                          const SizedBox(height: 40),
-
-                          _buildSectionTitle('COURSE VIDEOS'),
-                          const SizedBox(height: 16),
-                          if (_availableVideos.isEmpty)
+                          if (_availableVideos.isNotEmpty) ...[
+                            _buildSectionTitle('COURSE VIDEOS'),
+                            const SizedBox(height: 16),
+                            _buildVideosGrid(),
+                          ] else if (_verifiedPlans.isEmpty)
                             _buildEmptyState(
                               Icons.lock_outline,
                               'Purchase a plan to unlock premium video content.',
-                            )
-                          else
-                            _buildVideosGrid(),
+                            ),
                           const SizedBox(height: 80),
                         ],
                       ),
@@ -275,47 +270,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _verifiedPlans.map((plan) {
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFF10B981).withOpacity(0.05),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: const Color(0xFF10B981).withOpacity(0.2),
-                ),
+                color: const Color(0xFF1E293B).withOpacity(0.4),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.08)),
               ),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.check_circle,
-                    color: Color(0xFF10B981),
-                    size: 24,
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check_circle,
+                      color: Color(0xFF10B981),
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Text(
-                      plan['plan_name'],
+                      plan['plan_name'].toString().toUpperCase(),
                       style: const TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
+                      horizontal: 14,
+                      vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF10B981).withOpacity(0.1),
+                      color: const Color(0xFF10B981).withOpacity(0.08),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Text(
                       'ACTIVE',
                       style: TextStyle(
                         color: Color(0xFF10B981),
-                        fontSize: 10,
+                        fontSize: 11,
                         fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
