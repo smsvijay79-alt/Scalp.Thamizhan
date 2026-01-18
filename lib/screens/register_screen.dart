@@ -38,7 +38,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _isLoading = true);
     try {
-      await AuthService().signUp(
+      final response = await AuthService().signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
         data: {
@@ -46,6 +46,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'phone': _phoneController.text.trim(),
         },
       );
+
+      // Save to profiles table for admin tracking
+      if (response.user != null) {
+        await Supabase.instance.client.from('profiles').upsert({
+          'id': response.user!.id,
+          'email': _emailController.text.trim(),
+          'full_name': _nameController.text.trim(),
+          'phone': _phoneController.text.trim(),
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      }
       if (mounted) {
         // Check if session exists (auto-login)
         final session = AuthService().currentSession;

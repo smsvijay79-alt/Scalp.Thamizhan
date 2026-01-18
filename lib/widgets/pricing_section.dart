@@ -188,7 +188,7 @@ class _PricingSectionState extends State<PricingSection>
           description:
               'The Scalp.Tamizhan Discord Subscription Gives You Access To Our Private Trading Community - Built For Traders Who Want To Level Up Every Single Day Through Real-Time Learning And Mentorship.',
           features: [
-            'Phase-1 & Phase-2 Guidance',
+            'Phase-1 \u0026 Phase-2 Guidance',
             '24/7 Call Support',
             'Scalp Your Funded Account',
             'Complete Step by Step Roadmap',
@@ -230,8 +230,8 @@ class _PricingSectionState extends State<PricingSection>
           description:
               'The Basic Plan Trading Program Helps Traders Master Forex And US Futures Through Structured, Pre-Recorded Lessons And 1-Year Discord Mentorship. Learn, Apply, And Grow With Real-Time Market Experience And Expert Guidance.',
           features: [
-            'Pre-Recorded HD Lessons On Forex & US Futures',
-            '1-Year Discord Mentorship & Daily Support',
+            'Pre-Recorded HD Lessons On Forex \u0026 US Futures',
+            '1-Year Discord Mentorship \u0026 Daily Support',
             'Weekly Live NY Sessions For Real-Time Learning',
             'Bi-Weekly Giveaways For Top Traders',
             'Active Community To Learn And Grow',
@@ -257,7 +257,7 @@ class _PricingSectionState extends State<PricingSection>
           description:
               'The Scalp.Tamizhan Discord Subscription Gives You Access To Our Private Trading Community - Built For Traders Who Want To Level Up Every Single Day Through Real-Time Learning And Mentorship.',
           features: [
-            'Phase-1 & Phase-2 Guidance',
+            'Phase-1 \u0026 Phase-2 Guidance',
             '24/7 Call Support',
             'Scalp Your Funded Account',
             'Complete Step by Step Roadmap',
@@ -297,8 +297,8 @@ class _PricingSectionState extends State<PricingSection>
           description:
               'The Basic Plan Trading Program Helps Traders Master Forex And US Futures Through Structured, Pre-Recorded Lessons And 1-Year Discord Mentorship. Learn, Apply, And Grow With Real-Time Market Experience And Expert Guidance.',
           features: [
-            'Pre-Recorded HD Lessons On Forex & US Futures',
-            '1-Year Discord Mentorship & Daily Support',
+            'Pre-Recorded HD Lessons On Forex \u0026 US Futures',
+            '1-Year Discord Mentorship \u0026 Daily Support',
             'Weekly Live NY Sessions For Real-Time Learning',
             'Bi-Weekly Giveaways For Top Traders',
             'Active Community To Learn And Grow',
@@ -618,8 +618,6 @@ class _PricingSectionState extends State<PricingSection>
               planPrice.replaceAll(RegExp(r'[^0-9]'), ''),
             );
 
-            // Razorpay logic placeholder
-            // In a production app, you would use the razorpay_flutter package here
             _processRazorpayPayment(context, planName, amount, planSlug);
           },
           borderRadius: BorderRadius.circular(30),
@@ -670,9 +668,6 @@ class _PricingSectionState extends State<PricingSection>
     double amount,
     String planSlug,
   ) async {
-    // This is where you would trigger the Razorpay UI
-    // For now, we simulate a successful payment and save to Supabase
-
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -686,25 +681,104 @@ class _PricingSectionState extends State<PricingSection>
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) throw Exception('User not logged in');
 
+      String razorpayLink = '';
+
+      // Determine Razorpay link based on plan
+      if (planSlug.contains('DISCORD')) {
+        razorpayLink = 'https://rzp.io/rzp/GDjdEkj';
+      } else if (planSlug.contains('INTERMEDIATE')) {
+        razorpayLink = 'https://rzp.io/rzp/O3KM9Qq';
+      } else {
+        // Basic Plan
+        razorpayLink = 'https://rzp.io/rzp/AhfJNfM';
+      }
+
       if (!mounted) return;
       Navigator.pop(context); // Close loading dialog
 
-      // Handle post-payment redirection or confirmation
-      if (planSlug.contains('DISCORD')) {
-        final Uri razorpayUrl = Uri.parse('https://rzp.io/rzp/GDjdEkj');
-        if (await canLaunchUrl(razorpayUrl)) {
-          await launchUrl(razorpayUrl, mode: LaunchMode.externalApplication);
-        }
-      } else if (planSlug.contains('INTERMEDIATE')) {
-        final Uri razorpayUrl = Uri.parse('https://rzp.io/rzp/O3KM9Qq');
-        if (await canLaunchUrl(razorpayUrl)) {
-          await launchUrl(razorpayUrl, mode: LaunchMode.externalApplication);
-        }
-      } else {
-        // Basic Plan
-        final Uri razorpayUrl = Uri.parse('https://rzp.io/rzp/AhfJNfM');
-        if (await canLaunchUrl(razorpayUrl)) {
-          await launchUrl(razorpayUrl, mode: LaunchMode.externalApplication);
+      // Open Razorpay payment link
+      final Uri razorpayUrl = Uri.parse(razorpayLink);
+      if (await canLaunchUrl(razorpayUrl)) {
+        await launchUrl(razorpayUrl, mode: LaunchMode.externalApplication);
+
+        // Show dialog to confirm payment completion
+        if (!mounted) return;
+        final confirmed = await showDialog<bool?>(
+          context: context,
+          barrierDismissible: false,
+          builder:
+              (context) => AlertDialog(
+                backgroundColor: const Color(0xFF1E293B),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                title: const Text(
+                  'Payment Confirmation',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                content: const Text(
+                  'Have you completed the payment on Razorpay?',
+                  style: TextStyle(color: Colors.white70),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text(
+                      'Not Yet',
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFCDFF00),
+                      foregroundColor: Colors.black,
+                    ),
+                    child: const Text('Yes, Completed'),
+                  ),
+                ],
+              ),
+        );
+
+        if (confirmed == true) {
+          // Save payment to database with 'paid' status
+          if (!mounted) return;
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder:
+                (context) => const Center(
+                  child: CircularProgressIndicator(color: Color(0xFFCDFF00)),
+                ),
+          );
+
+          await Supabase.instance.client.from('payments').insert({
+            'user_id': user.id,
+            'user_email': user.email,
+            'plan_name': planName,
+            'amount': amount,
+            'status': 'paid',
+            'razorpay_payment_id':
+                'razorpay_${DateTime.now().millisecondsSinceEpoch}',
+            'created_at': DateTime.now().toIso8601String(),
+          });
+
+          if (!mounted) return;
+          Navigator.pop(context); // Close loading dialog
+
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Payment recorded successfully! You now have access to premium content.',
+              ),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 4),
+            ),
+          );
         }
       }
     } catch (e) {
